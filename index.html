@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="会計">
+  <title>会計</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: #f4f4f4;
+      color: #111;
+      user-select: none;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      height: 36px;
+      margin-bottom: 4px;
+    }
+
+    .navBtn {
+      border: none;
+      border-radius: 12px;
+      padding: 7px 13px;
+      font-size: 15px;
+      font-weight: 800;
+      background: #222;
+      color: #fff;
+      min-width: 84px;
+      height: 34px;
+    }
+
+    .item {
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      padding: 10px 11px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .productInfo {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-right: 4px;
+    }
+
+    .name {
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.15;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .price {
+      font-size: 16px;
+      font-weight: 800;
+      color: #555;
+      margin-top: 4px;
+      line-height: 1.1;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex: 0 0 142px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      font-weight: 900;
+      background: #111;
+      color: white;
+      cursor: pointer;
+    }
+
+    .qtyBtn {
+      font-size: 24px;
+      height: 44px;
+      width: 44px;
+    }
+
+    .minus {
+      background: #777;
+    }
+
+    .count {
+      width: 36px;
+      text-align: center;
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .totalBox {
+      margin-top: 10px;
+      border-radius: 18px;
+      padding: 12px;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+
+    .totalLabel {
+      font-size: 15px;
+      opacity: .82;
+      line-height: 1;
+    }
+
+    .total {
+      font-size: 38px;
+      font-weight: 950;
+      margin: 3px 0 8px;
+      line-height: 1.05;
+    }
+
+    .mainAction {
+      width: 100%;
+      height: 47px;
+      font-size: 20px;
+      border-radius: 14px;
+      margin-top: 6px;
+    }
+
+    .complete {
+      background: #0a7a33;
+    }
+
+    .reset {
+      background: #d33;
+    }
+
+    .logHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 2px 0 10px;
+    }
+
+    .logTitle {
+      font-size: 24px;
+      font-weight: 950;
+      margin: 0;
+    }
+
+    .logList {
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-bottom: 14px;
+    }
+
+    .logCard {
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 9px;
+      background: #fafafa;
+    }
+
+    .logTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .logNo {
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .logTotal {
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+    .logTime {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .logItems {
+      font-size: 13px;
+      color: #333;
+      line-height: 1.45;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      margin-top: 40px;
+      font-size: 16px;
+    }
+
+    .dangerSmall {
+      background: #d33;
+      height: 36px;
+      min-width: 88px;
+      border-radius: 12px;
+      font-size: 14px;
+      padding: 0 12px;
+    }
+
+    @media (max-width: 360px) {
+      .name {
+        font-size: 18px;
+      }
+
+      .price {
+        font-size: 14px;
+      }
+
+      .controls {
+        flex-basis: 130px;
+        gap: 5px;
+      }
+
+      .qtyBtn {
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+      }
+
+      .count {
+        width: 34px;
+        font-size: 23px;
+      }
+    }
+
+    @media (max-height: 700px) {
+      .app {
+        padding: 8px;
+      }
+
+      .topbar {
+        height: 32px;
+        margin-bottom: 2px;
+      }
+
+      .navBtn {
+        height: 31px;
+        font-size: 14px;
+        padding: 6px 12px;
+      }
+
+      .item {
+        padding: 8px 10px;
+        margin-bottom: 7px;
+        border-radius: 14px;
+      }
+
+      .name {
+        font-size: 18px;
+      }
+
+      .price {
+        font-size: 14px;
+        margin-top: 3px;
+      }
+
+      .qtyBtn {
+        height: 40px;
+        width: 40px;
+        font-size: 22px;
+      }
+
+      .count {
+        width: 34px;
+        font-size: 23px;
+      }
+
+      .controls {
+        flex-basis: 130px;
+      }
+
+      .totalBox {
+        padding: 10px;
+        margin-top: 8px;
+      }
+
+      .total {
+        font-size: 32px;
+        margin-bottom: 6px;
+      }
+
+      .mainAction {
+        height: 42px;
+        font-size: 18px;
+        margin-top: 5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <section id="mainPage" class="page active">
+      <div class="topbar">
+        <button class="navBtn" onclick="showPage('log')">ログ</button>
+      </div>
+
+      <div id="items"></div>
+
+      <div class="totalBox">
+        <div class="totalLabel">合計</div>
+        <div class="total" id="total">0円</div>
+        <button class="mainAction complete" onclick="completeSale()">完了</button>
+        <button class="mainAction reset" onclick="resetWithConfirm()">リセット</button>
+      </div>
+    </section>
+
+    <section id="logPage" class="page">
+      <div class="logHeader">
+        <h1 class="logTitle">本日のログ</h1>
+        <button class="navBtn" onclick="showPage('main')">会計</button>
+      </div>
+
+      <div class="logHeader">
+        <button class="dangerSmall" onclick="clearLogs()">ログ削除</button>
+      </div>
+
+      <div id="logList" class="logList"></div>
+    </section>
+
+  </div>
+
+  <script>
+    const products = [
+      { key: "baked", name: "焼き菓子", price: 350 },
+      { key: "coffee", name: "コーヒー", price: 500 },
+      { key: "banhmi", name: "バインミー", price: 600 },
+      { key: "tshirt", name: "Tシャツ", price: 3000 }
+    ];
+
+    const qty = {};
+    products.forEach(p => qty[p.key] = 0);
+
+    function todayKey() {
+      const d = new Date();
+      return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+    }
+
+    function storageKey() {
+      return "kaikei_logs_" + todayKey();
+    }
+
+    function yen(n) {
+      return n.toLocaleString("ja-JP") + "円";
+    }
+
+    function formatDateTime(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+    }
+
+    function getLogs() {
+      return JSON.parse(localStorage.getItem(storageKey()) || "[]");
+    }
+
+    function saveLogs(logs) {
+      localStorage.setItem(storageKey(), JSON.stringify(logs));
+    }
+
+    function renderItems() {
+      const wrap = document.getElementById("items");
+      wrap.innerHTML = products.map(p => `
+        <div class="item">
+          <div class="row">
+            <div class="productInfo">
+              <div class="name">${p.name}</div>
+              <div class="price">${yen(p.price)}</div>
+            </div>
+
+            <div class="controls">
+              <button class="qtyBtn minus" onclick="changeQty('${p.key}', -1)">−</button>
+              <div class="count" id="qty-${p.key}">0</div>
+              <button class="qtyBtn" onclick="changeQty('${p.key}', 1)">＋</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function changeQty(key, delta) {
+      qty[key] = Math.max(0, qty[key] + delta);
+      render();
+    }
+
+    function currentTotal() {
+      return products.reduce((sum, p) => sum + p.price * qty[p.key], 0);
+    }
+
+    function render() {
+      products.forEach(p => {
+        document.getElementById("qty-" + p.key).textContent = qty[p.key];
+      });
+
+      document.getElementById("total").textContent = yen(currentTotal());
+    }
+
+    function resetAll() {
+      products.forEach(p => qty[p.key] = 0);
+      render();
+    }
+
+    function resetWithConfirm() {
+      if (confirm("本当にリセットしますか？\n現在の入力内容はすべて消えます。")) {
+        resetAll();
+      }
+    }
+
+    function completeSale() {
+      const total = currentTotal();
+
+      if (total === 0) {
+        alert("商品が選択されていません。");
+        return;
+      }
+
+      const logs = getLogs();
+
+      const entry = {
+        no: logs.length + 1,
+        time: formatDateTime(new Date()),
+        total,
+        items: products.map(p => ({
+          name: p.name,
+          price: p.price,
+          qty: qty[p.key],
+          subtotal: p.price * qty[p.key]
+        }))
+      };
+
+      logs.push(entry);
+      saveLogs(logs);
+      resetAll();
+      alert("ログに保存しました。");
+    }
+
+    function showPage(page) {
+      document.getElementById("mainPage").classList.toggle("active", page === "main");
+      document.getElementById("logPage").classList.toggle("active", page === "log");
+
+      if (page === "log") {
+        renderLogs();
+      }
+    }
+
+    function renderLogs() {
+      const logs = getLogs();
+      const list = document.getElementById("logList");
+
+      if (logs.length === 0) {
+        list.innerHTML = '<div class="empty">本日のログはまだありません。</div>';
+        return;
+      }
+
+      list.innerHTML = logs.slice().reverse().map(log => {
+        const itemText = log.items
+          .filter(i => i.qty > 0)
+          .map(i => `${i.name} ${i.qty}個`)
+          .join(" / ");
+
+        return `
+          <div class="logCard">
+            <div class="logTop">
+              <div class="logNo">#${log.no}</div>
+              <div class="logTotal">${yen(log.total)}</div>
+            </div>
+            <div class="logTime">${log.time}</div>
+            <div class="logItems">${itemText}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function clearLogs() {
+      if (confirm("本日のログをすべて削除しますか？")) {
+        localStorage.removeItem(storageKey());
+        renderLogs();
+      }
+    }
+
+    renderItems();
+    render();
+  </script>
+</body>
+</html>
