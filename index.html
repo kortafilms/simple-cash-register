@@ -16,6 +16,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
+      touch-action: manipulation;
     }
 
     body {
@@ -114,6 +115,7 @@
       background: #111;
       color: white;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .qtyBtn {
@@ -363,6 +365,7 @@
 
       <div class="logHeader">
         <button class="dangerSmall" onclick="clearLogs()">ログ削除</button>
+        <button class="navBtn" onclick="exportCsv()">CSV出力</button>
       </div>
 
       <div id="logList" class="logList"></div>
@@ -372,10 +375,15 @@
 
   <script>
     const products = [
-      { key: "baked", name: "焼き菓子", price: 350 },
-      { key: "coffee", name: "コーヒー", price: 500 },
-      { key: "banhmi", name: "バインミー", price: 600 },
-      { key: "tshirt", name: "Tシャツ", price: 3000 }
+      { key: "hc", name: "ホットコーヒー", price: 450, oldNames: ["HC"] },
+      { key: "ic", name: "アイスコーヒー", price: 500, oldNames: ["I C", "IC"] },
+      { key: "banhmi_set_hc", name: "バインミーset (ホット)", price: 1100, oldNames: ["セプテンバインミーset HC"] },
+      { key: "banhmi_set_ic", name: "バインミーset (アイス)", price: 1150, oldNames: ["セプテンバインミーset IC"] },
+      { key: "banhmi_single", name: "バインミー (単品)", price: 700, oldNames: ["セプテンバインミー(単品)", "セプテンバインミー (単品)"] },
+      { key: "granola", name: "メープルとスパイスのグラノーラ", price: 600 },
+      { key: "cookie", name: "玄米フレーククッキー", price: 400, oldNames: ["玄米フレークとチョコレートのクッキー"] },
+      { key: "carrot_cake", name: "キャロットケーキ", price: 400 },
+      { key: "other_baked", name: "その他焼き菓子", price: 350 }
     ];
 
     const qty = {};
@@ -476,6 +484,7 @@
         time: formatDateTime(new Date()),
         total,
         items: products.map(p => ({
+          key: p.key,
           name: p.name,
           price: p.price,
           qty: qty[p.key],
@@ -531,6 +540,55 @@
         localStorage.removeItem(storageKey());
         renderLogs();
       }
+    }
+
+    function exportCsv() {
+      const keys = Object.keys(localStorage)
+        .filter(key => /^kaikei_logs_\d{4}-\d{2}-\d{2}$/.test(key))
+        .sort();
+      const rows = [];
+
+      keys.forEach(key => {
+        let logs;
+        try {
+          logs = JSON.parse(localStorage.getItem(key) || "[]");
+        } catch (e) {
+          return;
+        }
+        if (!Array.isArray(logs)) return;
+        logs.forEach(log => {
+          if (!log || !Array.isArray(log.items)) return;
+          const items = log.items.filter(item => item && Number(item.qty) > 0);
+          rows.push([
+            key.slice(-10), log.no, log.time, log.total,
+            ...products.map(p => items
+              .filter(item => Number(item.price) === p.price &&
+                (item.key === p.key || [p.name, ...(p.oldNames || [])].includes(item.name)))
+              .reduce((sum, item) => sum + Number(item.qty), 0)),
+            items.map(item => `${item.name} × ${item.qty} (${item.subtotal}円)`).join(" / ")
+          ]);
+        });
+      });
+
+      if (rows.length === 0) {
+        alert("出力できるログがありません。");
+        return;
+      }
+
+      const header = ["日付", "会計番号", "日時", "合計金額(円)",
+        ...products.map(p => `${p.name}（${p.price}円）数量`), "商品明細"];
+      const escapeCsv = value => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const csv = "\uFEFF" + [header, ...rows]
+        .map(row => row.map(escapeCsv).join(","))
+        .join("\r\n") + "\r\n";
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `会計ログ_${todayKey()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
     renderItems();
