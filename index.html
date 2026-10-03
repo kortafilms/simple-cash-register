@@ -189,9 +189,17 @@
     }
 
     .logList {
-      max-height: calc(100vh - 112px);
+      max-height: calc(100vh - 212px);
       overflow-y: auto;
       padding-bottom: 14px;
+    }
+
+    .dailySales {
+      margin: 0 0 10px;
+    }
+
+    .dailySales .total {
+      margin: 6px 0 0;
     }
 
     .logCard {
@@ -368,6 +376,11 @@
         <button class="navBtn" onclick="exportCsv()">CSV出力</button>
       </div>
 
+      <div class="totalBox dailySales">
+        <div class="totalLabel">本日の合計売上</div>
+        <div class="total" id="dailySalesTotal">0円</div>
+      </div>
+
       <div id="logList" class="logList"></div>
     </section>
 
@@ -375,13 +388,12 @@
 
   <script>
     const products = [
-      { key: "hc", name: "ホットコーヒー", price: 450, oldNames: ["HC"] },
-      { key: "ic", name: "アイスコーヒー", price: 500, oldNames: ["I C", "IC"] },
-      { key: "banhmi_set_hc", name: "バインミーset (ホット)", price: 1100, oldNames: ["セプテンバインミーset HC"] },
-      { key: "banhmi_set_ic", name: "バインミーset (アイス)", price: 1150, oldNames: ["セプテンバインミーset IC"] },
-      { key: "banhmi_single", name: "バインミー (単品)", price: 700, oldNames: ["セプテンバインミー(単品)", "セプテンバインミー (単品)"] },
-      { key: "granola", name: "メープルとスパイスのグラノーラ", price: 600 },
-      { key: "cookie", name: "玄米フレーククッキー", price: 400, oldNames: ["玄米フレークとチョコレートのクッキー"] },
+      { key: "dejeuner_set", name: "デジュネセット", price: 1700 },
+      { key: "hc", name: "ホットcoffee", price: 500, oldNames: ["HC", "ホットコーヒー"] },
+      { key: "apple_juice", name: "りんごジュース", price: 400 },
+      { key: "brulee", name: "ブリュレ", price: 350 },
+      { key: "granola", name: "グラノーラ", price: 600, oldNames: ["メープルとスパイスのグラノーラ"] },
+      { key: "cookie", name: "玄米フレークチョコ", price: 400, oldNames: ["玄米フレーククッキー", "玄米フレークとチョコレートのクッキー"] },
       { key: "carrot_cake", name: "キャロットケーキ", price: 400 },
       { key: "other_baked", name: "その他焼き菓子", price: 350 }
     ];
@@ -510,6 +522,8 @@
     function renderLogs() {
       const logs = getLogs();
       const list = document.getElementById("logList");
+      document.getElementById("dailySalesTotal").textContent =
+        yen(logs.reduce((sum, log) => sum + Number(log.total), 0));
 
       if (logs.length === 0) {
         list.innerHTML = '<div class="empty">本日のログはまだありません。</div>';
